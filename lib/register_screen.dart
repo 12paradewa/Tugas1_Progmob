@@ -1,102 +1,93 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  _RegisterPageState createState() => _RegisterPageState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
+class _RegisterPageState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String? _username;
+  String? _email;
+  String? _password;
+  final _dio = Dio();
+  final _storage = FlutterSecureStorage();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sign Up'),
+        title: Text('Register'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              Icons.person_outline,
-              size: 100.0,
-              color: Colors.blue,
-            ),
-            SizedBox(height: 20.0),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Username'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your username';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _username ??= value,
               ),
-            ),
-            SizedBox(height: 10.0),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Email'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _email ??= value,
               ),
-            ),
-            SizedBox(height: 10.0),
-            TextField(
-              obscureText: !_isPasswordVisible,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
-                ),
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _password ??= value,
               ),
-            ),
-            SizedBox(height: 10.0),
-            TextField(
-              obscureText: !_isConfirmPasswordVisible,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () {
-                    setState(() {
-                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                    });
-                  },
-                ),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    _formKey.currentState?.save();
+
+                    try {
+                      final response = _dio.post(
+                        'https://mobileapis.manpits.xyz/api/register',
+                        data: {
+                          'username': _username,
+                          'email': _email,
+                          'password': _password,
+                        },
+                      );
+
+                      response.then((value) async {
+                        await _storage.write(key: 'status', value: value.statusCode.toString());
+
+                        print('Status: ${value.statusCode}');
+                        print('Response: ${value.data}');
+                      });
+                    } catch (e) {
+                      print('Error: $e');
+                    }
+                  }
+                },
+                child: Text('Register'),
               ),
-            ),
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () {
-                // Tambahkan logika untuk proses pendaftaran
-              },
-              child: Text('Sign Up'),
-            ),
-            SizedBox(height: 10.0),
-            GestureDetector(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
-              child: Text(
-                "Already have an account? Login",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

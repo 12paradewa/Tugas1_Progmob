@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Icon(
                 Icons.person_outline, // Gunakan ikon kepala manusia dari Flutter Icons
                 size: 100.0,
-                color: Colors.blue, // Sesuaikan dengan warna yang Anda inginkan
+                color: const Color.fromARGB(255, 0, 0, 0), // Sesuaikan dengan warna yang Anda inginkan
               ),
               SizedBox(height: 20.0),
               Text(
