@@ -1,55 +1,89 @@
 import 'package:flutter/material.dart';
-import 'TradeMenu.dart';
-import 'MarketsMenu.dart';
-import 'PerformanceMenu.dart';
-import 'ProfileMenu.dart';
+import 'package:flutter_application_1/show_profile.dart';
+import 'package:flutter_application_1/welcome_screen.dart';
+import 'tradeMenu.dart'; // Import trade menu
+import 'marketsmenu.dart'; // Import markets menu
+import 'performanceMenu.dart'; // Import performance menu
+import 'show_profile.dart'; // Import profile menu
 
 class HomeScreen extends StatefulWidget {
+  final String? initialUsername;
+  final String? initialEmail;
+  final int? initialId;
+
+  HomeScreen({Key? key, this.initialUsername, this.initialEmail, this.initialId}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
+  String? _username;
+  String? _email;
+  int? _id;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set initial data from constructor if available
+    _username = widget.initialUsername;
+    _email = widget.initialEmail;
+    _id = widget.initialId;
+  }
+
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    // Navigasi ke layar yang sesuai saat ikon di BottomNavigationBar diklik
+    // Navigate to the appropriate screen when BottomNavigationBar icon is tapped
     switch (_selectedIndex) {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TradeMenu()),
+          MaterialPageRoute(builder: (context) => TradeMenu()), // Navigate to trade menu
         );
         break;
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MarketsMenu()),
+          MaterialPageRoute(builder: (context) => MarketsMenu()), // Navigate to markets menu
         );
         break;
       case 3:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PerformanceMenu()),
+          MaterialPageRoute(builder: (context) => PerformanceMenu()), // Navigate to performance menu
         );
         break;
       case 4:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ProfileMenu()),
+          MaterialPageRoute(builder: (context) => ShowProfile(
+            username: _username,
+            email: _email,
+            id: _id,
+          )),
         );
         break;
     }
+  }
+
+  void _logout() {
+    // Navigate back to login screen and remove all previous routes from stack
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Hilangkan tombol back di samping teks Accounts
+        automaticallyImplyLeading: false, // Remove back button next to Accounts text
         title: Text(
           'Accounts',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -58,11 +92,15 @@ class _HomeScreenState extends State with SingleTickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: IconButton(
-              icon: Icon(Icons.notifications), // Ganti ikon menjadi alarm dan lonceng
+              icon: Icon(Icons.notifications), // Change icon to alarm and bell
               onPressed: () {
-                // Tambahkan aksi untuk tombol ikon alarm dan lonceng di sini
+                // Add action for alarm and bell icon button here
               },
             ),
+          ),
+          IconButton(
+            icon: Icon(Icons.logout), // Add logout button
+            onPressed: _logout,
           ),
         ],
       ),
@@ -70,9 +108,9 @@ class _HomeScreenState extends State with SingleTickerProviderStateMixin {
         children: [
           SizedBox(height: 20),
           Container(
-            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30), // Mengatur padding horizontal
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30), // Set horizontal padding
             decoration: BoxDecoration(
-              color: Colors.grey[200], // Ubah warna background
+              color: Colors.grey[200], // Change background color
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -147,19 +185,19 @@ class _HomeScreenState extends State with SingleTickerProviderStateMixin {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color.fromARGB(255, 0, 0, 0), // warna ikon dan teks yang dipilih
-        unselectedItemColor: Colors.grey, // warna ikon dan teks yang tidak dipilih
+        selectedItemColor: const Color.fromARGB(255, 0, 0, 0), // Selected icon and text color
+        unselectedItemColor: Colors.grey, // Unselected icon and text color
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard), // Ubah ikon menjadi kotak-kotak
+            icon: Icon(Icons.dashboard), // Change icon to squares
             label: 'Accounts',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.candlestick_chart_rounded), // Ubah ikon menjadi candlestick
+            icon: Icon(Icons.candlestick_chart_rounded), // Change icon to candlestick
             label: 'Trade',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.public), // Ubah ikon menjadi bumi dengan garis
+            icon: Icon(Icons.public), // Change icon to globe with lines
             label: 'Markets',
           ),
           BottomNavigationBarItem(
@@ -168,7 +206,7 @@ class _HomeScreenState extends State with SingleTickerProviderStateMixin {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'ShowProfile',
           ),
         ],
       ),

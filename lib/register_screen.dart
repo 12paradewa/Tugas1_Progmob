@@ -1,19 +1,19 @@
-import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter_application_1/login_screen.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterPage extends StatefulWidget {
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterScreen> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  String? _username;
-  String? _email;
-  String? _password;
-  final _dio = Dio();
-  final _storage = FlutterSecureStorage();
+  String _name = '';
+  String _email = '';
+  String _password = '';
 
   @override
   Widget build(BuildContext context) {
@@ -26,16 +26,21 @@ class _RegisterPageState extends State<RegisterScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
-                decoration: InputDecoration(labelText: 'Username'),
+                decoration: InputDecoration(labelText: 'Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your username';
+                    return 'Please enter your name';
                   }
                   return null;
                 },
-                onSaved: (value) => _username ??= value,
+                onChanged: (value) {
+                  setState(() {
+                    _name = value;
+                  });
+                },
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Email'),
@@ -45,7 +50,11 @@ class _RegisterPageState extends State<RegisterScreen> {
                   }
                   return null;
                 },
-                onSaved: (value) => _email ??= value,
+                onChanged: (value) {
+                  setState(() {
+                    _email = value;
+                  });
+                },
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Password'),
@@ -56,31 +65,54 @@ class _RegisterPageState extends State<RegisterScreen> {
                   }
                   return null;
                 },
-                onSaved: (value) => _password ??= value,
+                onChanged: (value) {
+                  setState(() {
+                    _password = value;
+                  });
+                },
               ),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState?.validate() ?? false) {
-                    _formKey.currentState?.save();
-
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
                     try {
-                      final response = _dio.post(
-                        'https://mobileapis.manpits.xyz/api/register',
-                        data: {
-                          'username': _username,
-                          'email': _email,
-                          'password': _password,
-                        },
-                      );
-
-                      response.then((value) async {
-                        await _storage.write(key: 'status', value: value.statusCode.toString());
-
-                        print('Status: ${value.statusCode}');
-                        print('Response: ${value.data}');
+                      var url = Uri.parse('https://mobileapis.manpits.xyz/api/register');
+                      var request = http.MultipartRequest('POST', url);
+                      request.fields.addAll({
+                        'name': _name,
+                        'email': _email,
+                        'password': _password,
                       });
+
+                      var response = await request.send();
+
+                      // Read response data
+                      String responseBody = await response.stream.bytesToString();
+                      var jsonResponse = jsonDecode(responseBody);
+
+                      print('Response: $jsonResponse');
+
+                      if (response.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Pendaftaran Berhasil, Silahkan Login')),
+                        );
+                        // Navigate to home screen after successful registration
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Email Sudah Terdaftar')),
+                        );
+                      }
+                    } on SocketException catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Network error: ${e.message}')),
+                      );
                     } catch (e) {
-                      print('Error: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Unknown error: $e')),
+                      );
                     }
                   }
                 },
